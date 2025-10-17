@@ -35,7 +35,7 @@
             <div class="space-y-1">
               <p class="text-[8px] uppercase tracking-[0.32em] text-slate-400">Integrated Strategies collection</p>
               <h1 class="text-2xl font-semibold text-slate-900 sm:text-3xl">集成战略·藏品收集进度</h1>
-              <p class="text-[11px] text-slate-500">by pipi -v1.0</p>
+              <p class="text-[11px] text-slate-500">by pipi -v1.5</p>
               <p class="pt-1 text-[12px] leading-relaxed text-slate-500">
                 支持本地缓存、导入导出，方便随时管理藏品收集状态。
               </p>
@@ -14423,6 +14423,11 @@
         const numericId = typeof rawId === 'number' ? rawId : parseInt(String(rawId), 10);
         const displayId = Number.isFinite(numericId) ? String(numericId).padStart(3, '0') : String(rawId);
         const resolvedName = rawItem.name ?? rawItem.名称 ?? rawItem.title ?? rawItem.标题 ?? sectionTitle;
+        const description = String(rawItem.description ?? rawItem.描述 ?? rawItem.说明 ?? '').trim();
+        const effect = String(rawItem.effect ?? rawItem.效果 ?? '').trim();
+        const acquisition = String(rawItem.obtain ?? rawItem.获取 ?? '').trim();
+        const iconSource = rawItem.iconId ?? rawItem.icon_id ?? rawItem.IconId ?? rawItem.icon ?? '';
+        const iconId = iconSource ? String(iconSource).trim() : '';
         const lockableFlag = rawItem.lockable;
         const conditionSource = rawItem.条件 ?? rawItem.condition ?? rawItem.requirement ?? rawItem.unlock ?? rawItem.解锁条件;
         let lockable = false;
@@ -14440,6 +14445,7 @@
         } else if (conditionSource !== undefined) {
           lockable = String(conditionSource).trim() !== '';
         }
+        const lockConditionText = conditionSource ? String(conditionSource).trim() : '';
         let initialState = rawItem.initialState;
         if (initialState !== undefined) {
           const parsedInitial = parseInt(initialState, 10);
@@ -14447,13 +14453,30 @@
             initialState = parsedInitial;
           }
         }
-        return {
-          ...rawItem,
+        const searchBlob = [
+          displayId,
+          resolvedName,
+          description,
+          effect,
+          acquisition,
           sectionTitle,
+          lockConditionText,
+          rawItem.备注 ?? '',
+          rawItem.角标 ?? '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        return {
           id: displayId,
           name: resolvedName,
-          iconId: rawItem.iconId ?? rawItem.icon_id ?? rawItem.IconId ?? '',
+          iconId,
+          description,
+          effect,
+          acquisition,
+          sectionTitle,
           lockable,
+          lockCondition: lockConditionText,
+          searchBlob,
           initialState: initialState !== undefined ? initialState : lockable ? 0 : 1,
         };
       }
@@ -14617,7 +14640,7 @@
 
           const track = document.createElement('span');
           track.className = [
-            'relative block h-1.5 w-20 overflow-hidden rounded-full',
+            'relative block h-1.5 w-14 overflow-hidden rounded-full',
             activeTheme === theme ? 'bg-white/50' : 'bg-slate-200',
           ].join(' ');
 
@@ -14694,19 +14717,7 @@
             if (numericId) {
               if (item.id !== numericId) return;
             } else if (filter) {
-              const target = [
-                item.id,
-                item.name,
-                item.名称,
-                item.描述,
-                item.效果,
-                item.获取,
-                item.sectionTitle,
-                item.条件,
-              ]
-                .join(' ')
-                .toLowerCase();
-              if (!target.includes(filter)) return;
+              if (!item.searchBlob.includes(filter)) return;
             }
 
             hasVisibleItem = true;
@@ -14778,12 +14789,15 @@
                     <path d="M8 11V8a4 4 0 1 1 8 0v3" />
                   </svg>
                 `;
+                lockBtn.style.fontSize = '';
                 lockBtn.setAttribute('aria-label', '未解锁');
-                lockBtn.title = '未解锁 → 点击解锁';
+                lockBtn.title = item.lockCondition ? `解锁条件：${item.lockCondition}` : '未解锁 → 点击解锁';
               } else {
-                lockBtn.textContent = '已解锁';
+                const conditionLabel = item.lockCondition || '已解锁';
+                lockBtn.textContent = conditionLabel;
+                lockBtn.style.fontSize = '6px';
                 lockBtn.setAttribute('aria-label', '已解锁');
-                lockBtn.title = '已解锁 → 点击锁定';
+                lockBtn.title = item.lockCondition || '已解锁 → 点击锁定';
               }
               lockBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
