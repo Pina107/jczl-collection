@@ -14456,19 +14456,6 @@
             initialState = parsedInitial;
           }
         }
-        const searchBlob = [
-          displayId,
-          resolvedName,
-          description,
-          effect,
-          acquisition,
-          sectionTitle,
-          lockConditionText,
-          rawItem.备注 ?? '',
-          rawItem.角标 ?? '',
-        ]
-          .join(' ')
-          .toLowerCase();
         return {
           id: displayId,
           name: resolvedName,
@@ -14479,7 +14466,6 @@
           sectionTitle,
           lockable,
           lockCondition: lockConditionText,
-          searchBlob,
           initialState: initialState !== undefined ? initialState : lockable ? 0 : 1,
         };
       }
@@ -14717,11 +14703,12 @@
             const state = ensureState(theme, item);
             if (hide && state === 2) return;
 
-            if (numericId) {
-              if (item.id !== numericId) return;
-            } else if (filter) {
-              if (!item.searchBlob.includes(filter)) return;
-            }
+        if (numericId) {
+          if (item.id !== numericId) return;
+        } else if (filter) {
+          const nameTarget = `${item.name ?? ''}`.toLowerCase();
+          if (!nameTarget.includes(filter)) return;
+        }
 
             hasVisibleItem = true;
             const key = getItemKey(theme, item.id);
@@ -14853,7 +14840,7 @@
           });
 
           if (!hasVisibleItem) {
-            if (numericId) {
+            if (numericId || filter) {
               return;
             }
             list.className = 'border-t border-slate-200 bg-white px-4 py-4';
