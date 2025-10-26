@@ -14703,12 +14703,12 @@
             const state = ensureState(theme, item);
             if (hide && state === 2) return;
 
-        if (numericId) {
-          if (item.id !== numericId) return;
-        } else if (filter) {
-          const nameTarget = `${item.name ?? ''}`.toLowerCase();
-          if (!nameTarget.includes(filter)) return;
-        }
+            if (numericId) {
+              if (item.id !== numericId) return;
+            } else if (filter) {
+              const nameTarget = `${item.name ?? ''}`.toLowerCase();
+              if (!nameTarget.includes(filter)) return;
+            }
 
             hasVisibleItem = true;
             const key = getItemKey(theme, item.id);
